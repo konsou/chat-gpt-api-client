@@ -2,7 +2,6 @@ import datetime
 import json
 import os
 from dataclasses import dataclass
-from typing import NamedTuple
 
 PRICING = {
     'gpt-4-1106-preview': {
@@ -10,7 +9,7 @@ PRICING = {
         'output-1k-tokens': 0.03,
     }
 }
-TOKEN_USAGE_DIR = 'usage'
+TOKEN_USAGE_DIR = 'usage-logs'
 
 
 @dataclass
@@ -44,10 +43,25 @@ def save(usage: Usage):
 
 
 def add(tokens_input: int = 0, tokens_output: int = 0):
+    if tokens_input == 0 and tokens_output == 0:
+        return
+
+    input_str = '' if not tokens_input else f'{tokens_input} input tokens'
+    output_str = '' if not tokens_output else f'{tokens_output} output tokens'
+    print(f"Usage: {input_str} {output_str}")
     u = get()
     u.tokens_input += tokens_input
     u.tokens_output += tokens_output
     save(u)
+
+
+def print_summary():
+    u = get()
+    cost = (
+            (u.tokens_input / 1000 * PRICING['gpt-4-1106-preview']['input-1k-tokens']) +
+            (u.tokens_output / 1000 * PRICING['gpt-4-1106-preview']['output-1k-tokens'])
+    )
+    print(f"Usage: cost $ {cost:.2f} ({u.tokens_input} input tokens, {u.tokens_output} output tokens)")
 
 
 if __name__ == '__main__':

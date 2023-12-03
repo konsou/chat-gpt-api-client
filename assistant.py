@@ -6,6 +6,9 @@ import dotenv
 import tiktoken
 from openai import OpenAI
 
+import tokens
+import usage
+
 if __name__ == '__main__':
     dotenv.load_dotenv()
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -28,6 +31,8 @@ if __name__ == '__main__':
             role="user",
             content=user_input,
         )
+        input_usage = tokens.num_tokens_from_message(message, model=model)
+        usage.add(tokens_input=input_usage)
         print(f"Message created")
 
         print(f"Creating run")
@@ -62,7 +67,11 @@ if __name__ == '__main__':
         )
         for message in messages.data:
             if message.role == 'assistant':
-                print(f"ChatGPT:\n{message.content}")
+                print(f"ChatGPT:\n{message.content[0].text.value}")
+                output_tokens = tokens.num_tokens_from_message(message, model=model)
+                usage.add(tokens_output=output_tokens)
             else:
                 break
+
+        usage.print_summary()
 
